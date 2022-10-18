@@ -6,6 +6,9 @@ CLASS zcl_a5_utility DEFINITION
   PUBLIC SECTION.
     TYPES: lty_nr_object(10) TYPE c,
            lty_nr_number(20) TYPE n,
+** Added by I330907**
+           lty_nr_number_ex(7) TYPE n,
+** Added by I330907**
            lty_nr_error(1)   TYPE c.
 
     CONSTANTS: gc_Overhead   TYPE lty_nr_object VALUE 'ZNRA5_YP03',
@@ -15,7 +18,7 @@ CLASS zcl_a5_utility DEFINITION
     CLASS-METHODS: factory RETURNING VALUE(ro_instance) TYPE REF TO zcl_a5_utility.
 
     METHODS: get_number IMPORTING im_object TYPE lty_nr_object
-                        EXPORTING ex_number TYPE lty_nr_number
+                        EXPORTING ex_number TYPE lty_nr_number_ex
                         RAISING   cx_root,
       create_NR_intervals IMPORTING im_object       TYPE lty_nr_object
                           RETURNING VALUE(rv_error) TYPE lty_nr_error
@@ -65,6 +68,7 @@ CLASS zcl_a5_utility IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD: get_number.
+    DATA lv_number TYPE lty_nr_number.
 *---- Read Number Range Object
     IF me->read_nr_object( im_object = im_object ) = abap_true.
       TRY.
@@ -89,9 +93,32 @@ CLASS zcl_a5_utility IMPLEMENTATION.
             nr_range_nr = lc_nr_interval
             object      = im_object
           IMPORTING
-            number      = ex_number
+**            number      = ex_number
+** Added by I330907**
+            number      = lv_number
+** Added by I330907**
             returncode  = DATA(lv_rcode).
       ENDIF.
+      ex_number = lv_number.
+*** Added by I330907
+    ELSE.
+      lv_error = me->create_NR_intervals( im_object ).
+
+      IF lt_interval IS NOT INITIAL OR lv_error IS INITIAL.
+*---- GET Number Range Objects
+        CALL METHOD cl_numberrange_runtime=>number_get
+          EXPORTING
+            nr_range_nr = lc_nr_interval
+            object      = im_object
+          IMPORTING
+**            number      = ex_number
+** Added by I330907**
+            number      = lv_number
+** Added by I330907**
+            returncode  = lv_rcode.
+      ENDIF.
+      ex_number = lv_number.
+*** Added by I330907
     ENDIF.
   ENDMETHOD.
 
